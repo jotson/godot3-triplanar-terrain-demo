@@ -1,0 +1,60 @@
+[gd_resource type="Shader" format=2]
+
+[resource]
+
+code = "shader_type spatial;
+
+// Attempt to recreate the triplanar terrain shader by @minionsart
+// https://twitter.com/minionsart/status/958716559609954304
+
+render_mode blend_mix,depth_draw_opaque,cull_back,diffuse_burley,specular_schlick_ggx;
+
+// Magic that puts VERTEX/NORMAL in world coordinates instead of local
+render_mode world_vertex_coords;
+
+varying vec3 triplanar_pos;
+varying vec3 power_normal;
+varying vec3 world_normal;
+varying vec3 object_normal;
+
+uniform vec4 earth : hint_color;
+uniform sampler2D texture_earth;
+
+uniform vec4 grass : hint_color;
+uniform sampler2D texture_grass;
+
+void vertex() {
+	world_normal = vec3(0, 1.0, 0);
+	object_normal = NORMAL;
+	
+	power_normal = pow(abs(NORMAL), vec3(10.0));
+	power_normal = normalize(power_normal);
+	
+	triplanar_pos = VERTEX.xyz * vec3(1.0, -1.0, 1.0);
+}
+
+
+vec4 triplanar_texture(sampler2D p_sampler, vec3 p_weights, vec3 p_triplanar_pos) {
+	vec4 samp = vec4(0.0);
+	samp += texture(p_sampler, p_triplanar_pos.xy) * p_weights.z;
+	samp += texture(p_sampler, p_triplanar_pos.xz) * p_weights.y;
+	samp += texture(p_sampler, p_triplanar_pos.zy * vec2(-1.0,1.0)) * p_weights.x;
+	return samp;
+}
+
+
+void fragment() {
+	// Earth
+	vec4 earth_tex = triplanar_texture(texture_earth, power_normal, triplanar_pos);
+	ALBEDO = earth_tex.rgb * earth.rgb;
+	
+	// Grass
+	vec4 grass_tex = triplanar_texture(texture_grass, power_normal, triplanar_pos);
+	float mix = dot(object_normal, world_normal) * 4.0;
+	mix = clamp(mix, 0.0, 1.0);
+	ALBEDO.r = mix(ALBEDO.r, grass_tex.r * grass.r, mix);
+	ALBEDO.g = mix(ALBEDO.g, grass_tex.g * grass.g, mix);
+	ALBEDO.b = mix(ALBEDO.b, grass_tex.b * grass.b, mix);
+}
+"
+

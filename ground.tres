@@ -1,0 +1,16 @@
+[gd_resource type="ShaderMaterial" load_steps=4 format=2]
+
+[ext_resource path="res://ground-shader.tres" type="Shader" id=1]
+[ext_resource path="res://earth.png" type="Texture" id=2]
+[ext_resource path="res://grass.png" type="Texture" id=3]
+
+[resource]
+
+render_priority = 0
+shader = ExtResource( 1 )
+shader_param/earth = Color( 0.886719, 0.578445, 0.578445, 1 )
+shader_param/grass = Color( 0.795581, 0.910156, 0.643509, 1 )
+shader_param/texture_earth = ExtResource( 2 )
+shader_param/texture_grass = ExtResource( 3 )
+_sections_unfolded = [ "shader_param" ]
+
